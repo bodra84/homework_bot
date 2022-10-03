@@ -18,7 +18,7 @@ load_dotenv()
 PRACTICUM_TOKEN = os.getenv('Token_ya')
 TELEGRAM_TOKEN = os.getenv('Token_tlgrm')
 TELEGRAM_CHAT_ID = os.getenv('Chat_id')
-RETRY_TIME = 6
+RETRY_TIME = 600
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
@@ -52,8 +52,9 @@ def send_message(bot, message):
 
 
 def get_api_answer(current_timestamp):
-    """Функция делает запрос к эндпоинту API-сервиса и возвращает ответ API."""
-    timestamp = current_timestamp  # or int(time.time())
+    """Функция делает запрос к эндпоинту API-сервиса и возвращает ответ API.
+    """
+    timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
     try:
         response = requests.get(ENDPOINT, headers=HEADERS, params=params)
@@ -67,8 +68,9 @@ def get_api_answer(current_timestamp):
 
 
 def check_response(response):
-    """Функция проверяет запрос API на корректность и возвращает список
-    домашних работ по ключу 'homeworks'."""
+    """Функция проверяет запрос API на корректность.
+       Возвращает список домашних работ по ключу 'homeworks'.
+    """
     if type(response) is not dict:
         logger.error('Ответ от API не содержит словарь!')
         raise ResponseNotDict('Ответ от API не содержит словарь!')
@@ -88,8 +90,8 @@ def check_response(response):
 
 
 def parse_status(homework):
-    """Функция извлекает из информации о конкретной домашней работе статус
-    этой работы."""
+    """Функция извлекает из информации о конкретной домашней работе ее статус.
+    """
     if 'homework_name' not in homework:
         logger.error('Ключ [homework_name] не найден в словаре!')
         raise HomeworkNameNotInDict(
@@ -123,7 +125,7 @@ def main():
         sys.exit(0)
     get_api_answer_error = ''
     bot = Bot(token=TELEGRAM_TOKEN)
-    current_timestamp = 0  # int(time.time())
+    current_timestamp = int(time.time())
 
     while True:
         try:
