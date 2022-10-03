@@ -52,8 +52,7 @@ def send_message(bot, message):
 
 
 def get_api_answer(current_timestamp):
-    """Функция делает запрос к эндпоинту API-сервиса и возвращает ответ API.
-    """
+    """Функция делает запрос к эндпоинту API-сервиса и возвращает ответ API."""
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
     try:
@@ -69,7 +68,7 @@ def get_api_answer(current_timestamp):
 
 def check_response(response):
     """Функция проверяет запрос API на корректность.
-       Возвращает список домашних работ по ключу 'homeworks'.
+    Возвращает список домашних работ по ключу 'homeworks'.
     """
     if type(response) is not dict:
         logger.error('Ответ от API не содержит словарь!')
@@ -90,8 +89,7 @@ def check_response(response):
 
 
 def parse_status(homework):
-    """Функция извлекает из информации о конкретной домашней работе ее статус.
-    """
+    """Функция извлекает из инф-ции о конкретной домашней работе ее статус."""
     if 'homework_name' not in homework:
         logger.error('Ключ [homework_name] не найден в словаре!')
         raise HomeworkNameNotInDict(
