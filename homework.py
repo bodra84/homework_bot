@@ -66,9 +66,9 @@ def get_api_answer(current_timestamp):
             f'Ошибка при запросе к API yandex practicum: {error}')
     try:
         return response.json()
-    except Exception as error:
-        logger.error(f'Ошибка получения ответа из формата json!')
-        raise ValueError(f'Ошибка получения ответа из формата json!')
+    except Exception:
+        logger.error('Ошибка получения ответа из формата json!')
+        raise ValueError('Ошибка получения ответа из формата json!')
 
 
 def check_response(response):
