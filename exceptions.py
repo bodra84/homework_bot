@@ -1,30 +1,18 @@
-class ResponseNotDict(TypeError):
+class ResponseError(Exception):
     pass
 
 
-class HomeworkNotList(TypeError):
+class HomeworkNotList(Exception):
     pass
 
 
-class ResponseDictEmpty(ValueError):
+class ResponseStatusNotOK(Exception):
     pass
 
 
-class HomeworksNotInDict(KeyError):
+class HomeworkStatusesError(Exception):
     pass
 
 
-class ResponseStatusNotOK(ValueError):
-    pass
-
-
-class HomeworkStatusesError(KeyError):
-    pass
-
-
-class HomeworkNameNotInDict(KeyError):
-    pass
-
-
-class StatusNotInDict(KeyError):
+class StatusNotInDict(Exception):
     pass

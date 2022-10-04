@@ -8,9 +8,7 @@ import requests
 from dotenv import load_dotenv
 from telegram import Bot
 
-from exceptions import (HomeworkNameNotInDict, HomeworkNotList,
-                        HomeworksNotInDict, HomeworkStatusesError,
-                        ResponseDictEmpty, ResponseNotDict,
+from exceptions import (HomeworkNotList, HomeworkStatusesError, ResponseError,
                         ResponseStatusNotOK, StatusNotInDict)
 
 load_dotenv()
@@ -57,43 +55,49 @@ def get_api_answer(current_timestamp):
     params = {'from_date': timestamp}
     try:
         response = requests.get(ENDPOINT, headers=HEADERS, params=params)
+        if response.status_code != HTTPStatus.OK:
+            logger.error(f'Ошибка! Status_code {response.status_code}')
+            raise ResponseStatusNotOK(
+                f'Ошибка! Status_code {response.status_code}')
     except Exception as error:
         logger.error(f'Ошибка при запросе к API yandex practicum: {error}')
-    status_code = response.status_code
-    if status_code != HTTPStatus.OK:
-        logger.error(f'Ошибка! Status_code {status_code}')
-        raise ResponseStatusNotOK(f'Ошибка! Status_code {status_code}')
-    return response.json()
+        raise ResponseError(
+            f'Ошибка при запросе к API yandex practicum: {error}')
+    try:
+        return response.json()
+    except Exception as error:
+        logger.error(f'Ошибка получения ответа из формата json!')
+        raise ValueError(f'Ошибка получения ответа из формата json!')
 
 
 def check_response(response):
     """Функция проверяет запрос API на корректность.
     Возвращает список домашних работ по ключу 'homeworks'.
     """
-    if type(response) is not dict:
+    if not isinstance(response, dict):
         logger.error('Ответ от API не содержит словарь!')
-        raise ResponseNotDict('Ответ от API не содержит словарь!')
+        raise TypeError('Ответ от API не содержит словарь!')
     if not response:
         logger.error('Ответ от API содержит пустой словарь!')
-        raise ResponseDictEmpty('Ответ от API содержит пустой словарь!')
+        raise ValueError('Ответ от API содержит пустой словарь!')
     if 'homeworks' not in response:
         logger.error('Ответ от API не содержит ключа `homeworks`!')
-        raise HomeworksNotInDict('Ответ от API не содержит ключа `homeworks`!')
+        raise KeyError('Ответ от API не содержит ключа `homeworks`!')
     homeworks = response.get('homeworks')
-    if type(homeworks) is not list:
+    if not isinstance(homeworks, list):
         logger.error(
             'Домашняя работа в ответе от API получена не ввиде списка!')
         raise HomeworkNotList(
             'Домашняя работа в ответе от API получена не ввиде списка!')
-    return homeworks
+    else:
+        return homeworks
 
 
 def parse_status(homework):
     """Функция извлекает из инф-ции о конкретной домашней работе ее статус."""
     if 'homework_name' not in homework:
         logger.error('Ключ [homework_name] не найден в словаре!')
-        raise HomeworkNameNotInDict(
-            'Ключ [homework_name] не найден в словаре!')
+        raise KeyError('Ключ [homework_name] не найден в словаре!')
     if 'status' not in homework:
         logger.error('Ключ [status] не найден в словаре!')
         raise StatusNotInDict('Ключ [status] не найден в словаре!')
@@ -109,17 +113,16 @@ def parse_status(homework):
 
 def check_tokens():
     """Функция проверяет доступность переменных окружения."""
-    if PRACTICUM_TOKEN is None or TELEGRAM_TOKEN is None \
-            or TELEGRAM_CHAT_ID is None:
-        logger.critical('Ошибка чтения переменных окружения!')
-        return False
-    else:
+    if all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]):
         return True
+    else:
+        return False
 
 
 def main():
     """Основная логика работы бота."""
     if not check_tokens():
+        logger.critical('Ошибка чтения переменных окружения!')
         sys.exit(0)
     homework_status = ''
     get_api_answer_error = ''
@@ -130,9 +133,8 @@ def main():
         try:
             response = get_api_answer(current_timestamp)
             current_timestamp = response.get('current_date')
-            time.sleep(RETRY_TIME)
             homeworks = check_response(response)
-            if len(homeworks) == 0:
+            if homeworks:
                 logger.debug('В ответе нет новых статусов!')
             else:
                 homework = homeworks[0]
@@ -146,6 +148,7 @@ def main():
             if get_api_answer_error != message:
                 send_message(bot, message)
                 get_api_answer_error = message
+        finally:
             time.sleep(RETRY_TIME)
 
 
