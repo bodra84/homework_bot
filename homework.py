@@ -32,7 +32,8 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 fileHandler = logging.FileHandler("logfile.log", encoding='UTF-8')
 streamHandler = logging.StreamHandler(sys.stdout)
-formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
+formatter = logging.Formatter(
+    '%(asctime)s [%(levelname)s] %(message)s %(funcName)s')
 streamHandler.setFormatter(formatter)
 fileHandler.setFormatter(formatter)
 logger.addHandler(streamHandler)
@@ -134,7 +135,7 @@ def main():
             response = get_api_answer(current_timestamp)
             current_timestamp = response.get('current_date')
             homeworks = check_response(response)
-            if homeworks:
+            if not homeworks:
                 logger.debug('В ответе нет новых статусов!')
             else:
                 homework = homeworks[0]
