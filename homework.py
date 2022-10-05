@@ -32,8 +32,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 fileHandler = logging.FileHandler("logfile.log", encoding='UTF-8')
 streamHandler = logging.StreamHandler(sys.stdout)
-formatter = logging.Formatter(
-    '%(asctime)s [%(levelname)s] %(message)s %(funcName)s')
+formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
 streamHandler.setFormatter(formatter)
 fileHandler.setFormatter(formatter)
 logger.addHandler(streamHandler)
@@ -60,15 +59,14 @@ def get_api_answer(current_timestamp):
             logger.error(f'Ошибка! Status_code {response.status_code}')
             raise ResponseStatusNotOK(
                 f'Ошибка! Status_code {response.status_code}')
+        if not response.json():
+            logger.error('Ошибка получения ответа из формата json!')
+            raise ValueError('Ошибка получения ответа из формата json!')
+        return response.json()
     except Exception as error:
         logger.error(f'Ошибка при запросе к API yandex practicum: {error}')
         raise ResponseError(
             f'Ошибка при запросе к API yandex practicum: {error}')
-    try:
-        return response.json()
-    except Exception:
-        logger.error('Ошибка получения ответа из формата json!')
-        raise ValueError('Ошибка получения ответа из формата json!')
 
 
 def check_response(response):
@@ -114,17 +112,15 @@ def parse_status(homework):
 
 def check_tokens():
     """Функция проверяет доступность переменных окружения."""
-    if all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]):
-        return True
-    else:
-        return False
+    token_all = [PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]
+    return all(token_all)
 
 
 def main():
     """Основная логика работы бота."""
     if not check_tokens():
         logger.critical('Ошибка чтения переменных окружения!')
-        sys.exit(0)
+        sys.exit('Критическая ошибка! Токен не найден!')
     homework_status = ''
     get_api_answer_error = ''
     bot = Bot(token=TELEGRAM_TOKEN)
