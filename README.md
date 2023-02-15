@@ -6,7 +6,7 @@
 
 ### Технологии
 - Python 3.7
-- Django REST framewor
+- Django REST framework
 - REST API
 
 ### Запуск проекта:
